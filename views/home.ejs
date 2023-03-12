@@ -1,0 +1,13 @@
+<%- include("partials/header"); -%>
+
+    <h1>Home</h1>
+    <p><%= homeContent %></p>
+
+    <% journalContents.forEach( function(journal) { %>
+        <h3><%= journal.title%></h3>
+        <p><%= journal.content.substring(0, 100) + " ..." %> 
+            <a href="/journals/<%= journal.title %>">Read More</a> 
+        </p>
+    <%}); %>
+
+<%- include("partials/footer"); -%>
