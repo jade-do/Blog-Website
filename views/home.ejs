@@ -6,7 +6,7 @@
     <% journalContents.forEach( function(journal) { %>
         <h3><%= journal.title%></h3>
         <p><%= journal.content.substring(0, 100) + " ..." %> 
-            <a href="/journals/<%= journal.title %>">Read More</a> 
+            <a href="/journals/<%= journal._id %>">Read More</a> 
         </p>
     <%}); %>
 

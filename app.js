@@ -1,8 +1,11 @@
 //jshint esversion:6
 
 const express = require("express");
+const https = require("https");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+
+const mongoose = require("mongoose");
 const _ = require("lodash");
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
@@ -16,14 +19,38 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
+const uri = "mongodb+srv://thanhchaudo522:VKLs6CbXBBlOuIXw@cluster0.x2fbny8.mongodb.net/";
+mongoose.connect(uri + "journalsDB", {useNewUrlParser: true});
+
 const posts = [];
+
+const journalSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, "Please enter a title for your blog post!"]
+  },
+  content: String
+})
+
+const Journal = mongoose.model("Journal", journalSchema);
 
 
 app.get("/", function(req, res) {
-  res.render("home", {homeContent: homeStartingContent,
-                      journalContents: posts    
-                    });
-})
+  // res.render("home", {homeContent: homeStartingContent,
+  //                     journalContents: posts    
+  //                   });
+
+  Journal.find({})
+    .then((foundJournals) => {
+      res.render("home", {homeContent: homeStartingContent,
+                          journalContents: foundJournals})    
+
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+  
+});
 
 app.get("/home", function(req, res) {
   res.redirect("/");
@@ -41,36 +68,59 @@ app.get("/compose", function(req, res) {
   res.render("compose", {});
 })
 
-app.get("/journals/:journalName", function(req, res) {
+app.get("/journals/:journalId", function(req, res) {
   //console.log(req.params.journalName);
 
-  var requestedTitle = _.lowerCase(req.params.journalName);
+  // var requestedTitle = _.lowerCase(req.params.journalName);
 
-  posts.every( post => {
-    var storedTitle = _.lowerCase(post.title);
+  // posts.every( post => {
+  //   var storedTitle = _.lowerCase(post.title);
 
-    if (requestedTitle == storedTitle) {
-      res.render("journal", {journalTitle: post.title, journalBody: post.content});
-      return false;
-    }
+  //   if (requestedTitle == storedTitle) {
+  //     res.render("journal", {journalTitle: post.title, journalBody: post.content});
+  //     return false;
+  //   }
 
-    return true;
-  })
+  //   return true;
+  // })
+
+
+  var requestedId = req.params.journalId;
+  const foundJournal = Journal.findOne({_id: requestedId})
+    .then(function(foundJournal) {
+
+      if (! (foundJournal == null)) {
+        res.render("journal", {journalTitle: foundJournal.title,
+          journalBody: foundJournal.content});
+      } else {
+        res.redirect("/");
+      }
+      
+    })
+    .catch(function(err) {
+      res.redirect("/");
+      console.log(err);
+    });
+
+    
   
-  res.redirect("/");
 })
 
 app.post("/compose", function(req, res) {
-  var post = { title: req.body.journalTitle,
-              content: req.body.journalBody
-            }
+  // var post = { title: req.body.journalTitle,
+  //             content: req.body.journalBody
+  //           }
 
-  posts.push(post);  
+  var journal = new Journal({
+    title: req.body.journalTitle,
+    content: req.body.journalBody 
+  });
+
+  journal.save();
+
   res.redirect("/");
 
 })
-
-
 
 
 
